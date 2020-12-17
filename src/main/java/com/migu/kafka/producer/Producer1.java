@@ -1,6 +1,7 @@
 package com.migu.kafka.producer;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.util.Properties;
@@ -26,19 +27,24 @@ public class Producer1 {
       props.put("acks", "all");
       props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
       props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+      props.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "transactional_id-0");
       // 开启GZIP压缩
       props.put("compression.type", "gzip");
       producer = new KafkaProducer<>(props);
+      producer.initTransactions();
       this.topicName = topicName;
     }
 
     public void sendMsg(String key, String msg) {
       ProducerRecord<String, String> record = new ProducerRecord<>(topicName, key,msg);//Topic Key Value
       try{
+        producer.beginTransaction(); //消息队列事务操作
         Future future = producer.send(record);
-        producer.beginTransaction();
         future.get();//不关心是否发送成功，则不需要这行。
+        //TODO 加入DB数据库操作
+        producer.commitTransaction();
       } catch(Exception e) {
+        producer.abortTransaction();
         e.printStackTrace();//连接错误、No Leader错误都可以通过重试解决；消息太大这类错误kafkaProducer不会进行任何重试，直接抛出异常
       }
     }
