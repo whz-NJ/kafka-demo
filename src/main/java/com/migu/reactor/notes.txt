@@ -1,0 +1,66 @@
+selector = Selector.open()
+serverSocketChannel = ServerSocketChannel.open();
+serverSocketChannel.configureBlocking(false);
+serverSocketChannel.socket().bind(new InetSocketAddress(8888));
+SelectionKey selectionKey = serverSocketChannel.register(selector,
+        SelectionKey.OP_ACCEPT); // 将serverSocketChannel感兴趣的 ACCEPT 事件注册到Selector里
+selectionKey.attach(new Acceptor(serverSocketChannel, selector));
+
+Reactor.run() {
+    while (true) {
+        try {
+            selector.select(); // 扫描哪些selectionKey（通过 SocketChannel.register(selector,事件) 调用注册得到的）
+                               // 上有关注的事件
+            Iterator<SelectionKey> iter = selector.selectedKeys()
+                    .iterator();
+            while (iter.hasNext()) {
+                SelectionKey selectionKey = iter.next();
+                (Runnable) selectionKey.attachment().run(); // 之前通过selectionKey.attach()方法设置的，
+                                                            // 可能是Acceptor或Handler
+                iter.remove();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+Acceptor.run() {
+    try {
+        SocketChannel socketChannel = serverSocketChannel.accept(); // 建立与客户端的连接
+                                                                    //
+        if (socketChannel != null) {
+            System.out.println("接收到来自客户端（"
+                    + socketChannel.socket().getInetAddress()
+                            .getHostAddress() + "）的连接");
+            new Handler(selector, socketChannel);
+        }
+
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
+Handler构造函数：
+		this.socketChannel = socketChannel;
+		try {
+			socketChannel.configureBlocking(false); //设置与客户端的连接SocketChannel为非阻塞
+			selectionKey = socketChannel.register(selector, 0); // 将与客户端的连接SocketChannel注册到Selector上，
+			                                                    // 得到 selectionKey
+			selectionKey.interestOps(SelectionKey.OP_READ); // 通过selectionKey设置感兴趣事件为 READ
+			selectionKey.attach(this); //将selectionKey与Handler关联
+			selector.wakeup();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+Handler.run() {
+		ByteBuffer buffer = ByteBuffer.allocate(1024);
+		socketChannel.read(buffer);  //此时 OP_READ 事件自动消失
+		String request =new String(buffer.array());
+
+		selectionKey.interestOps(SelectionKey.OP_WRITE); //注册 OP_WRITE 感兴趣事件
+		String content = "Hello World!";
+        ByteBuffer buffer = ByteBuffer.wrap(content.getBytes());
+        socketChannel.write(buffer); //写返回消息
+        selectionKey.cancel(); //取消注册的 OP_WRITE 感兴趣事件，否则会无限触发
+}
