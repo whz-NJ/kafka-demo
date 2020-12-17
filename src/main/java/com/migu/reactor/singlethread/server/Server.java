@@ -1,4 +1,4 @@
-package com.migu.reactor.singlethread.client.server;
+package com.migu.reactor.singlethread.server;
 
 /**
  * @author whz
