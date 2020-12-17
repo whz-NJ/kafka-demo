@@ -1,4 +1,4 @@
-package com.migu.reactor.client;
+package com.migu.reactor.singlethread.client;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

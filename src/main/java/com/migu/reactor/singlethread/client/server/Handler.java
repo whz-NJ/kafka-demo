@@ -1,7 +1,6 @@
-package com.migu.reactor.server;
+package com.migu.reactor.singlethread.client.server;
 
 import java.io.IOException;
-import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;

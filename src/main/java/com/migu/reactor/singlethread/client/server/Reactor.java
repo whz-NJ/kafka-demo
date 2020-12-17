@@ -1,11 +1,10 @@
-package com.migu.reactor.server;
+package com.migu.reactor.singlethread.client.server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 import java.util.Iterator;
  
 public class Reactor implements Runnable {
