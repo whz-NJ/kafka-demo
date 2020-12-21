@@ -28,20 +28,23 @@ public class AsyncHandler implements Runnable{
     private int status = READ;
  
     public AsyncHandler(SocketChannel socketChannel, Selector selector) {
+        // socketChannel 为新接入的客户端连接， selector 为新的 Selector
         this.selector = selector;
         this.socketChannel = socketChannel;
         try {
             socketChannel.configureBlocking(false);
+            // 将 socketChannel 注册到新的 Selector
             selectionKey = socketChannel.register(selector,0);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        // 将 AsyncHandler 事务处理器和 Selector/SelectionKey 关联
         selectionKey.attach(this);
         selectionKey.interestOps(SelectionKey.OP_READ);
  
     }
  
-    //创建用来处理业务的线程池
+    // 由 Acceptor.reactors 线程池调用 SubReactor 调用的
     @Override
     public void run() {
         //对事件的处理

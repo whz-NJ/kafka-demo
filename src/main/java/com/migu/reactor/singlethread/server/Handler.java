@@ -22,8 +22,14 @@ class Handler implements Runnable {
 		this.socketChannel = socketChannel;
 		try {
 			socketChannel.configureBlocking(false);
+			// 将 SocketChannel 注册到Selector上，得到SelectionKey
+			// 调用 SelectionKey.attach() 将channel事件和处理类关联
+			// 每个channel只对应一个SelectionKey，所以如果要改变感兴趣事件，
+			// 只能改变 interestOps()，不能register()和cancel()。
+			// 一个Selector 对应多个 Channel（包括 ServerSocketChannel 和 SocketChannel）
 			selectionKey = socketChannel.register(selector, 0);
 			selectionKey.interestOps(SelectionKey.OP_READ);
+			// 调用 SelectionKey.attach() 将channel事件和处理类关联
 			selectionKey.attach(this);
 			selector.wakeup();
 		} catch (IOException e) {
@@ -37,6 +43,10 @@ class Handler implements Runnable {
 			if (status == READ_STATUS) {
 				System.out.println("status=READ_STATUS\n");
 				read();
+				// 将 SocketChannel 注册到Selector上
+				// 每个 Channel 对应一个TCP连接，一个 Channel 只对应一个 SelectionKey，所以如果要改变感兴趣事件，
+				// 只能改变 interestOps()，不能register()和cancel()。
+				// 一个Selector 对应多个 Channel（包括 ServerSocketChannel 和 SocketChannel）
 				selectionKey.interestOps(SelectionKey.OP_WRITE); //设置感兴趣的 OP_WRITE 事件
 				status = WRITE_STATUS;
 			} else if (status == WRITE_STATUS) {

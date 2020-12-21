@@ -16,6 +16,7 @@ public class Acceptor implements Runnable {
 
 		public void run() {
 			try {
+				//接入客户端连接请求，得到 SocketChannel
 				SocketChannel socketChannel = serverSocketChannel.accept();
 				if (socketChannel != null) {
 					System.out.println("接收到来自客户端（"

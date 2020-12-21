@@ -14,14 +14,16 @@ public class MainReactor extends AbstractReactor implements Runnable {
  
     public MainReactor(ServerSocketChannel serverSocketChannel,int port) {
         try {
+            // Selector是非阻塞的IO的核心
             this.selector =Selector.open();
-            //绑定端口
+            // 绑定端口
             serverSocketChannel.socket().bind(new InetSocketAddress(port));
-            //配置非阻塞模式
+            // 配置非阻塞模式
             serverSocketChannel.configureBlocking(false);
- 
+            // 一个Channel对应一个Selector，一个Selector对应多个Channel
+            // 将 Channel 注册到 Selector，得到 SelectionKey
             SelectionKey key = serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-            //依附处理Handler
+            //调用SelectionKey.attach()，将 Channel 事件处理器和 SelectionKey 关联
             key.attach(new Acceptor(serverSocketChannel));
  
         } catch (IOException e) {

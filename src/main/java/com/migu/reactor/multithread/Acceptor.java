@@ -22,6 +22,7 @@ public class Acceptor implements Runnable {
 
     private AtomicInteger index = new AtomicInteger();
 
+    // 由 MainReactor 构造方法生成 Acceptor 实例
     public Acceptor(ServerSocketChannel serverSocketChannel) throws IOException {
 
         this.serverSocketChannel = serverSocketChannel;
@@ -33,18 +34,22 @@ public class Acceptor implements Runnable {
         }
     }
 
+    // 由 MainReactor.run() 所在线程调用
     @Override public void run() {
         SocketChannel socketChannel;
         try {
+            // 接受客户端连接请求，得到 socketChannel 对象
             socketChannel = serverSocketChannel.accept();
             if (socketChannel != null) {
                 System.out.println(String.format("收到%s的连接", socketChannel.getRemoteAddress()));
                 socketChannel.configureBlocking(false);
+                // 获取一个新的Selector
                 Selector selector = getSeletor();
                 selector.wakeup();
+                // 将Channel注册到 新的 Selector 上，得到 SelectionKey
                 SelectionKey key = socketChannel.register(selector, SelectionKey.OP_READ);
+                // 调用 SelectionKey.attach() 将事件处理器和 Selector/SelectionKey 关联
                 key.attach(new AsyncHandler(socketChannel, selector));
-
             }
         }
         catch (IOException e) {
